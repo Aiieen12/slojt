@@ -9,17 +9,10 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminUserController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            abort_unless(Auth::user()?->role === 'admin', 403);
-
-            return $next($request);
-        });
-    }
-
     public function index()
     {
+        $this->authorizeAdmin();
+
         $users = User::orderBy('name')->get();
 
         return view('admin.users.index', compact('users'));
@@ -27,11 +20,15 @@ class AdminUserController extends Controller
 
     public function create()
     {
+        $this->authorizeAdmin();
+
         return view('admin.users.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorizeAdmin();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
@@ -51,11 +48,15 @@ class AdminUserController extends Controller
 
     public function editPassword(User $user)
     {
+        $this->authorizeAdmin();
+
         return view('admin.users.reset-password', compact('user'));
     }
 
     public function updatePassword(Request $request, User $user)
     {
+        $this->authorizeAdmin();
+
         $validated = $request->validate([
             'password' => 'required|string|min:8|confirmed',
         ]);
@@ -65,5 +66,10 @@ class AdminUserController extends Controller
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'Kata laluan pengguna berjaya ditetapkan semula.');
+    }
+
+    private function authorizeAdmin(): void
+    {
+        abort_unless(Auth::user()?->isAdmin(), 403);
     }
 }

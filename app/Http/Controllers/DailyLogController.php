@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class DailyLogController extends Controller
 {
+    protected function ensureStudentAccess(): void
+    {
+        abort_if(Auth::user()?->isAdmin(), 403);
+    }
+
     protected function isDraftRequest(Request $request): bool
     {
         return $request->input('save_action') === 'draft';
@@ -44,6 +49,8 @@ class DailyLogController extends Controller
 
     public function index()
     {
+        $this->ensureStudentAccess();
+
         $logs = DailyLog::where('user_id', Auth::id())
             ->orderBy('log_date', 'desc')
             ->get();
@@ -53,6 +60,8 @@ class DailyLogController extends Controller
 
     public function create()
     {
+        $this->ensureStudentAccess();
+
         $profile = OjtProfile::where('user_id', Auth::id())->first();
 
         return view('daily-logs.create', compact('profile'));
@@ -60,6 +69,8 @@ class DailyLogController extends Controller
 
     public function store(Request $request)
     {
+        $this->ensureStudentAccess();
+
         $isDraft = $this->isDraftRequest($request);
         $validated = $this->validateDailyLog($request, $isDraft);
 
@@ -97,6 +108,7 @@ class DailyLogController extends Controller
 
     public function show(DailyLog $daily_log)
     {
+        $this->ensureStudentAccess();
         abort_if($daily_log->user_id !== Auth::id(), 403);
 
         return view('daily-logs.show', compact('daily_log'));
@@ -104,6 +116,7 @@ class DailyLogController extends Controller
 
     public function edit(DailyLog $daily_log)
     {
+        $this->ensureStudentAccess();
         abort_if($daily_log->user_id !== Auth::id(), 403);
 
         return view('daily-logs.edit', compact('daily_log'));
@@ -111,6 +124,7 @@ class DailyLogController extends Controller
 
     public function update(Request $request, DailyLog $daily_log)
     {
+        $this->ensureStudentAccess();
         abort_if($daily_log->user_id !== Auth::id(), 403);
 
         $isDraft = $this->isDraftRequest($request);
@@ -155,6 +169,7 @@ class DailyLogController extends Controller
 
     public function destroy(DailyLog $daily_log)
     {
+        $this->ensureStudentAccess();
         abort_if($daily_log->user_id !== Auth::id(), 403);
 
         if ($daily_log->issue_challenge_image_path) {
@@ -168,6 +183,7 @@ class DailyLogController extends Controller
 
     public function viewIssueImage(DailyLog $daily_log)
     {
+        $this->ensureStudentAccess();
         abort_if($daily_log->user_id !== Auth::id(), 403);
         abort_unless($daily_log->issue_challenge_image_path, 404);
 
@@ -176,6 +192,7 @@ class DailyLogController extends Controller
 
     public function downloadIssueImage(DailyLog $daily_log)
     {
+        $this->ensureStudentAccess();
         abort_if($daily_log->user_id !== Auth::id(), 403);
         abort_unless($daily_log->issue_challenge_image_path, 404);
 

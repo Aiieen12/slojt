@@ -10,6 +10,8 @@ class OjtProfileController extends Controller
 {
     public function edit()
     {
+        abort_if(Auth::user()?->isAdmin(), 403);
+
         $profile = OjtProfile::firstOrCreate(
             ['user_id' => Auth::id()],
             [
@@ -25,6 +27,8 @@ class OjtProfileController extends Controller
 
     public function update(Request $request)
     {
+        abort_if(Auth::user()?->isAdmin(), 403);
+
         $request->validate([
             'company_name' => 'required',
             'department' => 'nullable',
